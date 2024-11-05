@@ -1,13 +1,16 @@
 import express from "express";
+import authRouter from "./routes/auth";
+import { dbConnect } from "./db";
 
 const app = express();
 
-const port = process.env.PORT || 3000;
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use("/auth", authRouter);
 
-app.get("/", (req, res) => {
-  res.send("<h1>App is running successfully</h1>");
-});
+const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
   console.log(`Server is running on : http://localhost:${port} `);
+  dbConnect();
 });
