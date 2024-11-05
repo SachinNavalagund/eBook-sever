@@ -1,8 +1,13 @@
-const add = (a: number, b: number): number => {
-  return a + b;
-};
+import express from "express";
 
-const a = 2;
-const b = 8;
+const app = express();
 
-console.log("Addition of a and b => ", add(a, b));
+const port = process.env.PORT || 3000;
+
+app.get("/", (req, res) => {
+  res.send("<h1>App is running successfully</h1>");
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on : http://localhost:${port} `);
+});
