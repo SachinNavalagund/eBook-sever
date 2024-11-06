@@ -1,6 +1,18 @@
-import { model, Schema } from "mongoose";
+import { model, ObjectId, Schema } from "mongoose";
 
-const userSchema = new Schema({
+export interface UserDoc {
+  _id: ObjectId;
+  email: string;
+  role: "user" | "author";
+  name?: string;
+  signedUp: boolean;
+  avatar?: {
+    url: string;
+    id: string;
+  };
+}
+
+const userSchema = new Schema<UserDoc>({
   name: {
     type: String,
     trim: true,
@@ -15,6 +27,15 @@ const userSchema = new Schema({
     type: String,
     enum: ["user", "author"],
     default: "user",
+  },
+  signedUp: {
+    type: Boolean,
+    default: false,
+  },
+  avatar: {
+    type: Object,
+    url: String,
+    id: String,
   },
 });
 
