@@ -1,4 +1,5 @@
 import { RequestHandler } from "express";
+import { isValidObjectId } from "mongoose";
 import { z, ZodObject, ZodRawShape } from "zod";
 
 export const emailValidationSchema = z.object({
@@ -40,7 +41,7 @@ export const newAuthorSchema = z.object({
     .optional(),
 });
 
-export const newBookSchema = z.object({
+const commonBookSchema = {
   title: z
     .string({
       required_error: "Title is missing!",
@@ -108,41 +109,128 @@ export const newBookSchema = z.object({
       (price) => price.sale < price.mrp,
       "Sale price should be less than mrp!"
     ),
-  fileInfo: z
-    .string({
-      required_error: "File info is required",
-      invalid_type_error: "Invalid file info!",
+};
+
+const fileInfo = z
+  .string({
+    required_error: "File info is required",
+    invalid_type_error: "Invalid file info!",
+  })
+  .transform((value, ctx) => {
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      ctx.addIssue({ code: "custom", message: "Invalid file info!" });
+      return z.NEVER;
+    }
+  })
+  .pipe(
+    z.object({
+      name: z
+        .string({
+          required_error: "FileInfo.name is missing!",
+          invalid_type_error: "Invalid file info.name!",
+        })
+        .trim(),
+      type: z
+        .string({
+          required_error: "FileInfo.type is missing!",
+          invalid_type_error: "Invalid file info.type!",
+        })
+        .trim(),
+      size: z
+        .number({
+          required_error: "FileInfo.size is missing!",
+          invalid_type_error: "Invalid file info.size!",
+        })
+        .nonnegative("Invalid FileInfo.size!"),
     })
-    .transform((value, ctx) => {
-      try {
-        return JSON.parse(value);
-      } catch (error) {
-        ctx.addIssue({ code: "custom", message: "Invalid file info!" });
+  );
+
+export const newBookSchema = z.object({
+  ...commonBookSchema,
+  fileInfo,
+});
+
+export const updateBookSchema = z.object({
+  ...commonBookSchema,
+  slug: z
+    .string({
+      message: "Invalid schema!",
+    })
+    .trim(),
+  fileInfo: fileInfo.optional(),
+});
+
+export const newReviewSchema = z.object({
+  rating: z
+    .number({
+      required_error: "Rating is missing!",
+      invalid_type_error: "Invalid rating!",
+    })
+    .nonnegative("Rating must be within 1 to 5")
+    .min(1, "Minimum rating should be 1")
+    .max(5, "Maximum rating should be 5"),
+  content: z
+    .string({
+      invalid_type_error: "Invalid rating!",
+    })
+    .optional(),
+  bookId: z
+    .string({
+      required_error: "Book id is missing!",
+      invalid_type_error: "Invalid book id!",
+    })
+    .transform((arg, ctx) => {
+      if (!isValidObjectId(arg)) {
+        ctx.addIssue({ code: "custom", message: "Invalid book id!" });
         return z.NEVER;
       }
+      return arg;
+    }),
+});
+
+export const historyValidationSchema = z.object({
+  bookId: z
+    .string({
+      required_error: "Book id is missing!",
+      invalid_type_error: "Invalid book id!",
     })
-    .pipe(
+    .transform((arg, ctx) => {
+      if (!isValidObjectId(arg)) {
+        ctx.addIssue({ code: "custom", message: "Invalid book id!" });
+        return z.NEVER;
+      }
+      return arg;
+    }),
+  lastLocation: z
+    .string({
+      invalid_type_error: "Invalid last location!",
+    })
+    .trim()
+    .optional(),
+  highlights: z
+    .array(
       z.object({
-        name: z
+        selection: z
           .string({
-            required_error: "FileInfo.name is missing!",
-            invalid_type_error: "Invalid file info.name!",
+            required_error: "Highlight selection is missing!",
+            invalid_type_error: "Invalid Highlight selection!",
           })
           .trim(),
-        type: z
+        fill: z
           .string({
-            required_error: "FileInfo.type is missing!",
-            invalid_type_error: "Invalid file info.type!",
+            required_error: "Highlight fill is missing!",
+            invalid_type_error: "Invalid Highlight fill!",
           })
           .trim(),
-        size: z
-          .number({
-            required_error: "FileInfo.size is missing!",
-            invalid_type_error: "Invalid file info.size!",
-          })
-          .nonnegative("Invalid FileInfo.size!"),
       })
-    ),
+    )
+    .optional(),
+  remove: z.boolean({
+    required_error: "remove is missing",
+    invalid_type_error: "remove must be a boolean value!",
+  }),
 });
 
 export const validate = <T extends ZodRawShape>(

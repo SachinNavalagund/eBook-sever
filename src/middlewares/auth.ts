@@ -1,4 +1,5 @@
 import UserModel from "@/models/user";
+import { IsPurchasedByTheUserHandler } from "@/types";
 import { formatUserProfile, sendErrorResponse } from "@/utils/helper";
 import { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
@@ -57,4 +58,23 @@ export const isAuthor: RequestHandler = (req, res, next) => {
       status: 401,
       res,
     });
+};
+
+export const isPurchasedByTheUser: IsPurchasedByTheUserHandler = async (
+  req,
+  res,
+  next
+) => {
+  const user = await UserModel.findOne({
+    _id: req.user.id,
+    books: req.body.bookId,
+  });
+  if (!user) {
+    return sendErrorResponse({
+      message: "Sorry we didn't found the book inside your library",
+      status: 403,
+      res,
+    });
+  }
+  next();
 };

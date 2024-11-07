@@ -11,6 +11,7 @@ export interface UserDoc {
     id: string;
   };
   authorId?: ObjectId;
+  books: ObjectId[];
 }
 
 const userSchema = new Schema<UserDoc>({
@@ -42,6 +43,12 @@ const userSchema = new Schema<UserDoc>({
     type: Schema.Types.ObjectId,
     ref: "Author",
   },
+  books: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Book",
+    },
+  ],
 });
 
 const UserModel = model("User", userSchema);

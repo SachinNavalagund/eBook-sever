@@ -8,6 +8,9 @@ import cookieParser from "cookie-parser";
 import { fileParser } from "./middlewares/file";
 import authorRouter from "./routes/author";
 import bookRouter from "./routes/book";
+import reviewRouter from "./routes/review";
+import historyRouter from "./routes/history";
+import cartRouter from "./routes/cart";
 
 const app = express();
 
@@ -18,6 +21,10 @@ app.use(cookieParser());
 app.use("/auth", authRouter);
 app.use("/author", authorRouter);
 app.use("/book", bookRouter);
+app.use("/review", reviewRouter);
+app.use("/history", historyRouter);
+app.use("/cart", cartRouter);
+
 app.post("/test", fileParser, (req, res) => {
   console.log(req.body);
   console.log(req.files);

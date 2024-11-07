@@ -1,4 +1,4 @@
-import { Model, model, ObjectId, Schema, Types } from "mongoose";
+import { Model, model, Schema, Types } from "mongoose";
 
 export interface BookDoc {
   author: Types.ObjectId;
@@ -9,6 +9,7 @@ export interface BookDoc {
   publishedAt: Date;
   publicationName: string;
   genre: string;
+  averageRating?: number;
   price: {
     mrp: number;
     sale: number;
@@ -54,6 +55,7 @@ const bookSchema = new Schema<BookDoc>({
     required: true,
     trim: true,
   },
+  averageRating: Number,
   genre: {
     type: String,
     required: true,
