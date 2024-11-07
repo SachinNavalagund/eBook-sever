@@ -12,9 +12,11 @@ import reviewRouter from "./routes/review";
 import historyRouter from "./routes/history";
 import cartRouter from "./routes/cart";
 import checkoutRouter from "./routes/checkout";
+import webhookRouter from "./routes/webhook";
 
 const app = express();
 
+app.use("/webhook", webhookRouter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
