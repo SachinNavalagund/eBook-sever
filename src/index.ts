@@ -11,6 +11,7 @@ import bookRouter from "./routes/book";
 import reviewRouter from "./routes/review";
 import historyRouter from "./routes/history";
 import cartRouter from "./routes/cart";
+import checkoutRouter from "./routes/checkout";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/book", bookRouter);
 app.use("/review", reviewRouter);
 app.use("/history", historyRouter);
 app.use("/cart", cartRouter);
+app.use("/checkout", checkoutRouter);
 
 app.post("/test", fileParser, (req, res) => {
   console.log(req.body);
