@@ -9,12 +9,12 @@ type OrderItem = {
 
 interface OrderDocument {
   userId: ObjectId;
-  stripCustomerId: string;
-  paymentId: string;
-  totalAmount: number;
-  paymentStatus: string;
-  paymentErrorMessage: string;
   orderItems: OrderItem[];
+  stripCustomerId?: string;
+  paymentId?: string;
+  totalAmount?: number;
+  paymentStatus?: string;
+  paymentErrorMessage?: string;
   createdAt: Date;
 }
 
@@ -24,25 +24,6 @@ const orderSchema = new Schema<OrderDocument>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-    },
-    stripCustomerId: {
-      type: String,
-      required: true,
-    },
-    paymentId: {
-      type: String,
-      required: true,
-    },
-    totalAmount: {
-      type: Number,
-      required: true,
-    },
-    paymentStatus: {
-      type: String,
-      required: true,
-    },
-    paymentErrorMessage: {
-      type: String,
     },
     orderItems: [
       {
@@ -65,6 +46,11 @@ const orderSchema = new Schema<OrderDocument>(
         },
       },
     ],
+    stripCustomerId: String,
+    paymentId: String,
+    totalAmount: Number,
+    paymentStatus: String,
+    paymentErrorMessage: String,
   },
   { timestamps: true }
 );

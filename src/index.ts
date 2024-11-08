@@ -13,6 +13,7 @@ import historyRouter from "./routes/history";
 import cartRouter from "./routes/cart";
 import checkoutRouter from "./routes/checkout";
 import webhookRouter from "./routes/webhook";
+import orderRouter from "./routes/order";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/review", reviewRouter);
 app.use("/history", historyRouter);
 app.use("/cart", cartRouter);
 app.use("/checkout", checkoutRouter);
+app.use("/order", orderRouter);
 
 app.post("/test", fileParser, (req, res) => {
   console.log(req.body);
