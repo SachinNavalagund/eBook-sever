@@ -2,6 +2,7 @@ import BookModel, { BookDoc } from "@/models/book";
 import CartModel from "@/models/cart";
 import OrderModel from "@/models/order";
 import stripe from "@/stripe";
+
 import { sanitizeUrl, sendErrorResponse } from "@/utils/helper";
 import { RequestHandler } from "express";
 import { isValidObjectId } from "mongoose";
@@ -9,13 +10,12 @@ import Stripe from "stripe";
 
 type StripeLineItems = Stripe.Checkout.SessionCreateParams.LineItem[];
 
-type Options = {
+type options = {
   customer: Stripe.CustomerCreateParams;
   line_items: StripeLineItems;
 };
 
-const generateStripeCheckOutSession = async (options: Options) => {
-  //checkout session Stripe
+const generateStripeCheckoutSession = async (options: options) => {
   const customer = await stripe.customers.create(options.customer);
 
   const session = await stripe.checkout.sessions.create({
@@ -32,13 +32,8 @@ const generateStripeCheckOutSession = async (options: Options) => {
 
 export const checkout: RequestHandler = async (req, res) => {
   const { cartId } = req.body;
-
   if (!isValidObjectId(cartId)) {
-    return sendErrorResponse({
-      res,
-      message: "Invalid cart id!",
-      status: 404,
-    });
+    return sendErrorResponse({ res, message: "Invalid cart id!", status: 401 });
   }
 
   const cart = await CartModel.findOne({
@@ -51,12 +46,24 @@ export const checkout: RequestHandler = async (req, res) => {
   });
 
   if (!cart) {
-    return sendErrorResponse({
-      res,
-      message: "Cart not found!",
-      status: 404,
-    });
+    return sendErrorResponse({ res, message: "Cart not found!", status: 404 });
   }
+
+  // let invalidPurchase = false;
+  // for (let cartItem of cart.items) {
+  //   if (cartItem.product.status === "unpublished") {
+  //     invalidPurchase = true;
+  //     break;
+  //   }
+  // }
+
+  // if (invalidPurchase) {
+  //   return sendErrorResponse({
+  //     res,
+  //     message: "Sorry some of the books in your cart is no longer for sale!",
+  //     status: 403,
+  //   });
+  // }
 
   const newOrder = await OrderModel.create({
     userId: req.user.id,
@@ -70,6 +77,7 @@ export const checkout: RequestHandler = async (req, res) => {
     }),
   });
 
+  // now if the cart is valid and there are products inside the cart we will send those information to the stripe and generate the payment link.
   const customer = {
     name: req.user.name,
     email: req.user.email,
@@ -82,13 +90,13 @@ export const checkout: RequestHandler = async (req, res) => {
 
   const line_items = cart.items.map(({ product, quantity }) => {
     const images = product.cover
-      ? { images: [sanitizeUrl(product.cover?.url)] }
+      ? { images: [sanitizeUrl(product.cover.url)] }
       : {};
     return {
       quantity,
       price_data: {
         currency: "usd",
-        unit_amount: product.price.sale * 100,
+        unit_amount: product.price.sale,
         product_data: {
           name: product.title,
           ...images,
@@ -97,7 +105,7 @@ export const checkout: RequestHandler = async (req, res) => {
     };
   });
 
-  const session = await generateStripeCheckOutSession({ customer, line_items });
+  const session = await generateStripeCheckoutSession({ customer, line_items });
 
   if (session.url) {
     res.json({ checkoutUrl: session.url });
@@ -115,12 +123,13 @@ export const instantCheckout: RequestHandler = async (req, res) => {
   if (!isValidObjectId(productId)) {
     return sendErrorResponse({
       res,
-      message: "Invalid Product id!",
-      status: 404,
+      message: "Invalid product id!",
+      status: 401,
     });
   }
 
   const product = await BookModel.findById(productId);
+
   if (!product) {
     return sendErrorResponse({
       res,
@@ -128,6 +137,14 @@ export const instantCheckout: RequestHandler = async (req, res) => {
       status: 404,
     });
   }
+
+  // if (product.status === "unpublished") {
+  //   return sendErrorResponse({
+  //     res,
+  //     message: "Sorry this book is no longer for sale!",
+  //     status: 403,
+  //   });
+  // }
 
   const newOrder = await OrderModel.create({
     userId: req.user.id,
@@ -146,13 +163,13 @@ export const instantCheckout: RequestHandler = async (req, res) => {
     email: req.user.email,
     metadata: {
       userId: req.user.id,
-      orderId: newOrder._id.toString(),
       type: "instant-checkout",
+      orderId: newOrder._id.toString(),
     },
   };
 
   const images = product.cover
-    ? { images: [sanitizeUrl(product.cover?.url)] }
+    ? { images: [sanitizeUrl(product.cover.url)] }
     : {};
 
   const line_items: StripeLineItems = [
@@ -160,7 +177,7 @@ export const instantCheckout: RequestHandler = async (req, res) => {
       quantity: 1,
       price_data: {
         currency: "usd",
-        unit_amount: product.price.sale * 100,
+        unit_amount: product.price.sale,
         product_data: {
           name: product.title,
           ...images,
@@ -169,8 +186,7 @@ export const instantCheckout: RequestHandler = async (req, res) => {
     },
   ];
 
-  const session = await generateStripeCheckOutSession({ customer, line_items });
-
+  const session = await generateStripeCheckoutSession({ customer, line_items });
   if (session.url) {
     res.json({ checkoutUrl: session.url });
   } else {

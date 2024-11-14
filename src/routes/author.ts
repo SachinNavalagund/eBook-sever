@@ -24,6 +24,6 @@ authorRouter.patch(
   updateAuthor
 );
 
-authorRouter.get("/:slug", getAuthorDetails);
+authorRouter.get("/:id", getAuthorDetails);
 
 export default authorRouter;

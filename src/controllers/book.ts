@@ -212,6 +212,11 @@ export const getAllPurchasedBooks: RequestHandler = async (req, res) => {
   });
 };
 
+export const getAllBooks: RequestHandler = async (req, res) => {
+  const books = await BookModel.find().limit(5);
+  res.json({ books });
+};
+
 export const getBooksPublicDetails: RequestHandler = async (req, res) => {
   const book = await BookModel.findOne({ slug: req.params.slug }).populate<{
     author: PopulatedBooks["author"];

@@ -1,5 +1,6 @@
 import "express-async-errors";
 import express from "express";
+import cors from "cors";
 
 import authRouter from "./routes/auth";
 import { dbConnect } from "./db";
@@ -17,6 +18,7 @@ import orderRouter from "./routes/order";
 
 const app = express();
 
+app.use(cors({ origin: [process.env.APP_URL!], credentials: true }));
 app.use("/webhook", webhookRouter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
