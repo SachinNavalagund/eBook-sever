@@ -207,6 +207,7 @@ export const getAllPurchasedBooks: RequestHandler = async (req, res) => {
       author: {
         name: book.author.name,
         slug: book.author.slug,
+        id: book.author._id,
       },
     })),
   });
@@ -354,7 +355,11 @@ export const generateBookAccessUrl: RequestHandler = async (req, res) => {
     Key: book.fileInfo?.id,
   });
 
+  console.log("Book command", bookGetCommand);
+
   const accessUrl = await getSignedUrl(s3Client, bookGetCommand);
+
+  console.log("Access url", accessUrl);
 
   res.json({ settings, url: accessUrl });
 };
